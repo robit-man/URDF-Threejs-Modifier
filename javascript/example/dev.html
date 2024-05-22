@@ -158,7 +158,7 @@
                                 <button onClick="console.log(viewer);">Log Viewer</button>
                                 <button onClick="populateJointNames(), populateLinkNames()">Cycle List</button>
                                 <button id="reload-btn">Reload</button>
-                                <button id="chart-active">Chart</button>
+                                <button id="chart-active" onClick="chartToggle = !chartToggle">Chart</button>
                                 <button>Phys</button>
                                 <button for="colorPicker" class="color-select">
                                     <div class="color-wrapper"><input type="color" id="colorPicker" name="color"
@@ -504,114 +504,119 @@
 
 
     <script>
-class ChartComponent extends HTMLElement {
-    constructor() {
-        super();
-        this.chart = null;
-        this._resizeListener = () => this.resizeChart();
-    }
 
-    connectedCallback() {
-        this.initializeChart();
-        window.addEventListener('resize', this._resizeListener);
-        window.addEventListener('update-quaternion', this.handleQuaternionUpdate.bind(this));
-        //console.log("Chart component connected.");
-    }
+        let chartToggle = false;
 
-    disconnectedCallback() {
-        window.removeEventListener('resize', this._resizeListener);
-        window.removeEventListener('update-quaternion', this.handleQuaternionUpdate.bind(this));
-        //console.log("Chart component disconnected.");
-    }
+        class ChartComponent extends HTMLElement {
+            constructor() {
+                super();
+                this.chart = null;
+                this._resizeListener = () => this.resizeChart();
+            }
 
-    handleQuaternionUpdate(event) {
-        const { jointName, quaternion } = event.detail;
-        this.updateChart(quaternion);
-    }
+            connectedCallback() {
+                this.initializeChart();
+                window.addEventListener('resize', this._resizeListener);
+                window.addEventListener('update-quaternion', this.handleQuaternionUpdate.bind(this));
+                //console.log("Chart component connected.");
+            }
 
-    updateChart(quaternion) {
-        const { _x: x, _y: y, _z: z, _w: w } = quaternion;
-        const now = Date.now();
+            disconnectedCallback() {
+                window.removeEventListener('resize', this._resizeListener);
+                window.removeEventListener('update-quaternion', this.handleQuaternionUpdate.bind(this));
+                //console.log("Chart component disconnected.");
+            }
 
-        this.chart.data.labels.push(now);
-        this.chart.data.datasets[0].data.push(x);
-        this.chart.data.datasets[1].data.push(y);
-        this.chart.data.datasets[2].data.push(z);
-        this.chart.data.datasets[3].data.push(w);
+            handleQuaternionUpdate(event) {
+                const { jointName, quaternion } = event.detail;
+                this.updateChart(quaternion);
+            }
 
-        if (this.chart.data.labels.length > 1000) {
-            this.chart.data.labels.shift();
-            this.chart.data.datasets.forEach(dataset => dataset.data.shift());
-        }
+            updateChart(quaternion) {
+                const { _x: x, _y: y, _z: z, _w: w } = quaternion;
+                const now = Date.now();
 
-        this.chart.update();
-    }
+                this.chart.data.labels.push(now);
+                this.chart.data.datasets[0].data.push(x);
+                this.chart.data.datasets[1].data.push(y);
+                this.chart.data.datasets[2].data.push(z);
+                this.chart.data.datasets[3].data.push(w);
 
-    initializeChart() {
-        const canvas = document.createElement('canvas');
-        this.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
+                if (this.chart.data.labels.length > 1000) {
+                    this.chart.data.labels.shift();
+                    this.chart.data.datasets.forEach(dataset => dataset.data.shift());
+                }
+                if (chartToggle == true) {
+                    this.chart.update();
+                }
+                else { return }
+            }
 
-        this.chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [
-                    { label: ' X', data: [], borderColor: 'rgb(255, 99, 132)', fill: false, tension: 0.4 },
-                    { label: ' Y', data: [], borderColor: 'rgb(54, 162, 235)', fill: false, tension: 0.4 },
-                    { label: ' Z', data: [], borderColor: 'rgb(75, 192, 192)', fill: false, tension: 0.4 },
-                    { label: ' W', data: [], borderColor: 'rgb(153, 102, 255)', fill: false, tension: 0.4 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'millisecond',
-                            stepSize: 10, // Adjust step size to fit the typical interval between your data points
-                            displayFormats: {
-                                millisecond: 'HH:mm:ss.SSS'
-                            },
-                            tooltipFormat: 'HH:mm:ss.SSS'
-                        },
-                        ticks: {
-                            autoSkip: true,
-                            maxTicksLimit: 20,
-                            color: 'black',
-                            font: {
-                                size: 8
-                            }
-                        }
+            initializeChart() {
+                const canvas = document.createElement('canvas');
+                this.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            { label: ' X', data: [], borderColor: 'rgb(255, 99, 132)', fill: false, tension: 0.4 },
+                            { label: ' Y', data: [], borderColor: 'rgb(54, 162, 235)', fill: false, tension: 0.4 },
+                            { label: ' Z', data: [], borderColor: 'rgb(75, 192, 192)', fill: false, tension: 0.4 },
+                            { label: ' W', data: [], borderColor: 'rgb(153, 102, 255)', fill: false, tension: 0.4 }
+                        ]
                     },
-                    y: {
-                        beginAtZero: false
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: 'black',
-                            font: {
-                                size: 8
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'millisecond',
+                                    stepSize: 10, // Adjust step size to fit the typical interval between your data points
+                                    displayFormats: {
+                                        millisecond: 'HH:mm:ss.SSS'
+                                    },
+                                    tooltipFormat: 'HH:mm:ss.SSS'
+                                },
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: 20,
+                                    color: 'black',
+                                    font: {
+                                        size: 8
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'black',
+                                    font: {
+                                        size: 8
+                                    }
+                                }
                             }
                         }
                     }
+                });
+            }
+
+            resizeChart() {
+                if (this.chart) {
+                    this.chart.resize();
                 }
             }
-        });
-    }
-
-    resizeChart() {
-        if (this.chart) {
-            this.chart.resize();
         }
-    }
-}
 
-customElements.define('chart-cont', ChartComponent);
+        customElements.define('chart-cont', ChartComponent);
 
 
     </script>
