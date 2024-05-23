@@ -104,7 +104,6 @@ export class URDFDragControls {
 
     onDragStart(joint) {
         //console.log(joint);
-
     }
 
     onDragEnd(joint) {

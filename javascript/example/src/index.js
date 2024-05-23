@@ -5,6 +5,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import URDFLoader from 'urdf-loader';
 import URDFManipulator from '../../src/urdf-manipulator-element.js';
 
 customElements.define('urdf-viewer', URDFManipulator);
@@ -29,16 +30,16 @@ const RAD2DEG = 1 / DEG2RAD;
 let sliders = {};
 let lastSelectedJoint = null;
 let urdfDoc;
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 let intersectionHelper;
-let length;
 // Initialize the intersection helper
 function initIntersectionHelper() {
     const geometry = new THREE.SphereGeometry(0.05, 32, 32);
     const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     intersectionHelper = new THREE.Mesh(geometry, material);
     viewer.scene.add(intersectionHelper);
+    console.log(intersectionHelper);
 }
 
 // Global Functions
@@ -140,14 +141,16 @@ function editURDF(urdfContent) {
         urdfDoc = new DOMParser().parseFromString(urdfContent, "text/xml");
     }
 }
+
+
 viewer.addEventListener('joint-mouseover', e => {
-    const jointName = e.detail; // Assuming `e.detail` contains the name of the hovered joint
+    const jointName = e.detail;
     const jointSelector = document.getElementById('joint-selector');
     const linkSelector = document.getElementById('link-selector');
     const jointOption = document.querySelector(`#joint-selector option[value="${jointName}"]`);
     const j = document.querySelector(`li[joint-name="${jointName}"]`);
     const joint = viewer.robot.joints[jointName];
-    
+
     if (joint && joint.children && joint.children.length > 0) {
         const linkChild = joint.children[0];
         const linkName = linkChild.name;
@@ -157,14 +160,12 @@ viewer.addEventListener('joint-mouseover', e => {
         }
 
         if (lastSelectedJoint && lastSelectedJoint !== jointName) {
-            setTransparency(lastSelectedJoint, false); // Revert the last selected joint to opaque
+            setTransparency(lastSelectedJoint, false);
         }
 
-        setTransparency(jointName, true); // Make the current joint transparent
+        setTransparency(jointName, true);
+        lastSelectedJoint = jointName;
 
-        lastSelectedJoint = jointName; // Update the last selected joint
-
-        // Update the raycaster with the mouse position
         const rect = viewer.getBoundingClientRect();
         mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -179,7 +180,6 @@ viewer.addEventListener('joint-mouseover', e => {
             intersectionHelper.visible = false;
         }
 
-        // Check if the option exists in the select dropdown, if not, create and append it
         if (!jointOption) {
             const newOption = document.createElement('option');
             newOption.value = jointName;
@@ -187,7 +187,6 @@ viewer.addEventListener('joint-mouseover', e => {
             jointSelector.appendChild(newOption);
         }
 
-        // Set the select element's value to the hovered joint name
         jointSelector.value = jointName;
         linkSelector.value = linkName;
     }
@@ -198,7 +197,6 @@ viewer.addEventListener('joint-mouseout', e => {
     if (j) j.removeAttribute('robot-hovered');
     intersectionHelper.visible = false;
 });
-
 
 let originalNoAutoRecenter;let dataInterval; // Define this globally to manage the interval from different event handlers
 
@@ -810,16 +808,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('mousemove', function (e) {
         const rect = viewer.getBoundingClientRect();
-    mouse.x = ((viewer.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((viewer.clientY - rect.top) / rect.height) * 2 + 1;
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, viewer.camera);
-    const jointSelector = document.getElementById('joint-selector');
 
-    const jointName = jointSelector.value;
-
-    const intersects = raycaster.intersectObjects(viewer.robot.joints[jointName], true);
-    console.log(intersects);
-
+    const intersects = raycaster.intersectObjects(Object.values(viewer.robot.joints).flatMap(joint => joint.children), true);
     if (intersects.length > 0) {
         intersectionHelper.position.copy(intersects[0].point);
         intersectionHelper.visible = true;
@@ -1052,6 +1045,7 @@ function saveURDF(event) {
     }
 }
 document.addEventListener('DOMContentLoaded', initIntersectionHelper);
+
 // Function to initialize event listeners once the document is ready
 document.addEventListener('DOMContentLoaded', () => {
     // document.getElementById('edit-urdf-btn').addEventListener('click', editURDF);
