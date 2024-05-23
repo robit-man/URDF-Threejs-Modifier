@@ -34,13 +34,12 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let intersectionHelper;
 // Initialize the intersection helper
+
 function initIntersectionHelper() {
-    const geometry = new THREE.SphereGeometry(0.05, 32, 32);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    intersectionHelper = new THREE.Mesh(geometry, material);
+    intersectionHelper = new THREE.AxesHelper(0.5); // Change the size if needed
     viewer.scene.add(intersectionHelper);
-    console.log(intersectionHelper);
 }
+
 
 // Global Functions
 const setColor = color => {
@@ -806,26 +805,40 @@ document.addEventListener('DOMContentLoaded', function () {
         dragHandle.style.cursor = 'grab';
     });
 
-    document.addEventListener('mousemove', function (e) {
-        const rect = viewer.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    raycaster.setFromCamera(mouse, viewer.camera);
 
-    const intersects = raycaster.intersectObjects(Object.values(viewer.robot.joints).flatMap(joint => joint.children), true);
-    if (intersects.length > 0) {
-        intersectionHelper.position.copy(intersects[0].point);
-        intersectionHelper.visible = true;
-        console.log('Intersection position:', intersects[0].point);
-    } else {
-        intersectionHelper.visible = false;
-    }
+    document.addEventListener('mousemove', (event) => {
+        const rect = viewer.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, viewer.camera);
+    
+        const intersects = raycaster.intersectObjects(Object.values(viewer.robot.joints).flatMap(joint => joint.children), true);
+        if (intersects.length > 0) {
+            const intersect = intersects[0];
+            intersectionHelper.position.copy(intersect.point);
+            intersectionHelper.visible = true;
+    
+            // Align the intersection helper with the intersected surface
+            const normalMatrix = new THREE.Matrix3().getNormalMatrix(intersect.object.matrixWorld);
+            const normal = intersect.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+            const up = new THREE.Vector3(0, 1, 0);
+            const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
+            intersectionHelper.setRotationFromQuaternion(quaternion);
+
+            console.log('Intersection position:', intersect.point);
+
+            console.log('Helper position:', intersectionHelper.position);
+            
+        } else {
+            intersectionHelper.visible = false;
+        }
         if (drag && !sliding) {
             dragHandle.style.left = e.clientX + offsetX + 'px';
             dragHandle.style.top = e.clientY + offsetY + 'px';
         }
     });
 });
+
 document.addEventListener('DOMContentLoaded', function () {
     var consoleElement = document.getElementById('dragHandle');
     var scaleIndicator = document.getElementById('window-scale');
