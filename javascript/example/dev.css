@@ -71,7 +71,12 @@
     justify-content: center;
     gap: 4px;
 }
-
+.buttonrow button{
+    width:100%;
+}
+.inputrow button{
+    margin-left:auto;margin-right:4px;
+}
 * {
     font-family: "Rajdhani", sans-serif !important; scrollbar-width: none!important; 
 }
@@ -144,7 +149,9 @@ select::placeholder {
 ul::-webkit-scrollbar {
     display: none;
 }
-
+#buttoncol button{
+    width:100%;
+}
 #sliderSection {}
 
 #joint-selection-save,
@@ -344,8 +351,13 @@ ul {
 }
 
 #link-img {
-    height: 24px;
-    width: 24px;
+    height: 16px;
+    width: 16px;
+    filter: invert(1);
+}
+#link-img2 {
+    height: 16px;
+    width: 16px;
     filter: invert(1);
 }
 
@@ -378,7 +390,8 @@ button {
     padding: 4px 8px;
     border-radius: 0.25rem;
     cursor: pointer;
-    width: 100%;
+    width: fit-content;
+    height:fit-content;
     transition: all 0.2s ease;
     font-weight: 800;
     text-transform: uppercase;

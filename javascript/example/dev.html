@@ -44,21 +44,26 @@
                             </div>
                             <div class="inputrow">
                                 <label for="joint-position-xyz">Position (XYZ):</label>
+                                <button class="link-origin" onclick="toggleLink()">
+                                 <div style="display: flex;flex-flow: column;justify-content: center;"> <input type="checkbox" id="link-toggle" style="display: none;" checked />
+                                    <img src="./linked.svg" alt="Linked" id="link-img"
+                                        style="cursor: pointer;"> 
+                                        <img src="./unlinked.svg" alt="Linked" id="link-img2" 
+                                        style="cursor: pointer; display:none;"></div>  
+                                </button>
                                 <input type="text" id="joint-position-xyz" placeholder="x° y° z°"
                                     oninput="syncInputs('position')">
                             </div>
-                            <div class="linkbutton">
-                                <input type="checkbox" id="link-toggle" style="display: none;" checked />
-                                <img src="./linked.svg" alt="Linked" id="link-img" onclick="toggleLink()"
-                                    style="cursor: pointer;">
-                            </div>
+                        
                             <div class="inputrow">
                                 <label for="joint-origin-xyz">Origin (XYZ):</label>
+                                <button id="select-joint-origin">Select Origin</button>
                                 <input type="text" id="joint-origin-xyz" placeholder="x° y° z°"
                                     oninput="syncInputs('origin')">
                             </div>
                             <div class="inputrow">
                                 <label for="joint-origin-rpy">Rotation (RPY):</label>
+
                                 <input type="text" id="joint-origin-rpy" placeholder="roll° pitch° yaw°">
                             </div>
                             <div class="inputrow">
@@ -90,6 +95,7 @@
                             </div>
                             <div class="inputrow">
                                 <label for="visual-origin-xyz">Visual Origin (XYZ):</label>
+                                <button id="select-joint-origin">Select Origin</button>
                                 <input type="text" id="visual-origin-xyz" placeholder="x° y° z°">
                             </div>
                             <div class="inputrow">
@@ -257,16 +263,19 @@
         function toggleLink() {
             const checkbox = document.getElementById('link-toggle');
             const linkImage = document.getElementById('link-img');
+            const linkImage2 = document.getElementById('link-img2');
 
             checkbox.checked = !checkbox.checked; // Toggle the checkbox state
 
             // Change the image source based on whether the box is checked
             if (checkbox.checked) {
-                linkImage.src = './linked.svg'; // Path to the linked image
-                linkImage.alt = '🔗';
+                linkImage.setAttribute("style","display:flex!important");
+                linkImage2.setAttribute("style","display:none");
+
             } else {
-                linkImage.src = './unlinked.svg'; // Path to the unlinked image
-                linkImage.alt = '!🔗';
+                linkImage2.setAttribute("style","display:flex");
+                linkImage.setAttribute("style","display:none");
+
             }
         }
 

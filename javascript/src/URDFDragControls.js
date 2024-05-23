@@ -71,6 +71,7 @@ export class URDFDragControls {
             const hit = intersections[0];
             this.hitDistance = hit.distance;
             hoveredJoint = findNearestJoint(hit.object);
+            //console.log(hoveredJoint);
             this.initialGrabPoint.copy(hit.point);
 
         }
@@ -102,6 +103,7 @@ export class URDFDragControls {
     }
 
     onDragStart(joint) {
+        //console.log(joint);
 
     }
 

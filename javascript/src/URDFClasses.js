@@ -129,7 +129,7 @@ class URDFJoint extends URDFBase {
     }
 
     setJointValue(...values) {
-        // console.log('Initial values received:', values);
+        //console.log('Initial values received:', values);
         values = values.map(v => v === null ? null : parseFloat(v));
         // console.log('Parsed values:', values);
         if (!this.origPosition || !this.origQuaternion) {
@@ -171,7 +171,7 @@ class URDFJoint extends URDFBase {
             case 'continuous':
             case 'revolute':
                 let angle = values[0];
-                // console.log('Current angle:', angle);
+                //console.log('Current angle:', angle);
                 if (!this.ignoreLimits && this.jointType === 'revolute') {
                     angle = Math.min(this.limit.upper, angle);
                     angle = Math.max(this.limit.lower, angle);
@@ -187,7 +187,7 @@ class URDFJoint extends URDFBase {
                 break;
             case 'prismatic':
                 let pos = values[0];
-                console.log('Current position:', pos);
+                //console.log('Current position:', pos);
                 if (!this.ignoreLimits) {
                     pos = Math.min(this.limit.upper, pos);
                     pos = Math.max(this.limit.lower, pos);
