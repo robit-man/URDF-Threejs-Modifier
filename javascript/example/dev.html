@@ -30,7 +30,12 @@
             <div id="controls" class="hidden">
 
                 <div class="main-stack" id="main-stack">
-
+                    <div style="display:flex;flex-flow:row;gap:16px;margin-bottom:1rem;" class="command-buttons">
+                        <button id="connectButton">Serial</button>
+                        <button id="useSomaVal">Soma</button>
+                        <div id="serialValue"></div>
+                        <div id="status"></div>
+                    </div>
                     <div id="joint-controls">
 
                         <div class="inputrow" onclick="toggleWrap(event, 'jointPropToggle')">
@@ -45,16 +50,17 @@
                             <div class="inputrow">
                                 <label for="joint-position-xyz">Position (XYZ):</label>
                                 <button class="link-origin" onclick="toggleLink()">
-                                 <div style="display: flex;flex-flow: column;justify-content: center;"> <input type="checkbox" id="link-toggle" style="display: none;" checked />
-                                    <img src="./linked.svg" alt="Linked" id="link-img"
-                                        style="cursor: pointer;"> 
-                                        <img src="./unlinked.svg" alt="Linked" id="link-img2" 
-                                        style="cursor: pointer; display:none;"></div>  
+                                    <div style="display: flex;flex-flow: column;justify-content: center;"> <input
+                                            type="checkbox" id="link-toggle" style="display: none;" checked />
+                                        <img src="./linked.svg" alt="Linked" id="link-img" style="cursor: pointer;">
+                                        <img src="./unlinked.svg" alt="Linked" id="link-img2"
+                                            style="cursor: pointer; display:none;">
+                                    </div>
                                 </button>
                                 <input type="text" id="joint-position-xyz" placeholder="x° y° z°"
                                     oninput="syncInputs('position')">
                             </div>
-                        
+
                             <div class="inputrow">
                                 <label for="joint-origin-xyz">Origin (XYZ):</label>
                                 <button id="select-joint-origin">Select Origin</button>
@@ -207,7 +213,6 @@
     <urdf-viewer up="+Y" display-shadow tabindex="0"></urdf-viewer>
 
     <script type="module" src="./src/index.js"></script>
-    <script src="./src/ammo.js"></script>
 
 
 
@@ -271,12 +276,12 @@
 
             // Change the image source based on whether the box is checked
             if (checkbox.checked) {
-                linkImage.setAttribute("style","display:flex!important");
-                linkImage2.setAttribute("style","display:none");
+                linkImage.setAttribute("style", "display:flex!important");
+                linkImage2.setAttribute("style", "display:none");
 
             } else {
-                linkImage2.setAttribute("style","display:flex");
-                linkImage.setAttribute("style","display:none");
+                linkImage2.setAttribute("style", "display:flex");
+                linkImage.setAttribute("style", "display:none");
 
             }
         }

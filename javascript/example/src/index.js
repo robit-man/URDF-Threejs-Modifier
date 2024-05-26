@@ -5,7 +5,6 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import URDFLoader from 'urdf-loader';
 import URDFManipulator from '../../src/urdf-manipulator-element.js';
 
 customElements.define('urdf-viewer', URDFManipulator);
@@ -238,6 +237,110 @@ viewer.addEventListener('manipulate-end', () => {
     clearInterval(dataInterval); // Stop the data streaming when manipulation ends
     viewer.noAutoRecenter = originalNoAutoRecenter;
 });
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Proximity Section
+let somaVal = 0;
+let somaToggle = false;  // Ensure somaToggle state is maintained across calls
+
+document.getElementById('connectButton').addEventListener('click', connectToSerial);
+document.getElementById('useSomaVal').addEventListener('click', toggleSomaVal);
+
+let serialValueDisplay = document.getElementById('serialValue');
+let statusDisplay = document.getElementById('status');
+let port;
+let reader;
+let previousValue = null;
+let buffer = '';  // Buffer to accumulate data
+
+async function connectToSerial() {
+    if ('serial' in navigator) {
+        try {
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 9600 });
+            statusDisplay.textContent = 'Connected';
+
+            const textDecoder = new TextDecoderStream();
+            port.readable.pipeTo(textDecoder.writable);
+            reader = textDecoder.readable.getReader();
+
+            readSerial();
+        } catch (error) {
+            console.error('Error opening the serial port:', error);
+            statusDisplay.textContent = 'Connection Error';
+        }
+    } else {
+        console.error('Web Serial API not supported.');
+        statusDisplay.textContent = 'Web Serial Not Supported';
+    }
+}
+
+async function readSerial() {
+    try {
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+                reader.releaseLock();
+                break;
+            }
+            buffer += value;  // Append new string data to buffer
+            let eolIndex;
+            while ((eolIndex = buffer.indexOf('\n')) >= 0) { // Find the newline character
+                const line = buffer.slice(0, eolIndex).trim(); // Extract the line
+                buffer = buffer.slice(eolIndex + 1); // Remove the processed line from buffer
+                if (line) {
+                    processSerialInput(line); // Process the complete line
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error reading serial data:', error);
+        statusDisplay.textContent = 'Read Error';
+    }
+}
+
+function processSerialInput(line) {
+    let serialValue = parseInt(line, 10);
+    if (!isNaN(serialValue)) {
+        if (previousValue === null || Math.abs(serialValue - previousValue) <= 2000) {
+            previousValue = serialValue;
+            let mappedSensor = mapValue(serialValue, 4500, 8500, 0, 360);
+
+            serialValueDisplay.textContent = `${mappedSensor.toFixed(2)}`;
+            statusDisplay.textContent = `Current Value: ${serialValue}`;
+
+            if (somaToggle) {
+                const jointName = document.getElementById('joint-selection-save').value;
+                updateJointFromSensor(jointName, mappedSensor * DEG2RAD);
+            }
+        }
+    } else {
+        statusDisplay.textContent = 'Non-numeric data received';
+    }
+}
+
+function toggleSomaVal() {
+    somaToggle = !somaToggle;
+    console.log(`Sensor input is now ${somaToggle ? 'enabled' : 'disabled'}.`);
+}
+
+function updateJointFromSensor(jointName, sensorValue) {
+    if (viewer && viewer.robot && viewer.robot.joints[jointName]) {
+        viewer.setJointValue(jointName, sensorValue);
+        console.log(`Joint ${jointName} set to ${sensorValue}`);
+    }
+}
+
+function mapValue(value, inMin, inMax, outMin, outMax) {
+    return ((value - inMin) * (outMax - outMin) / (inMax - inMin)) + outMin;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 // create the sliders
 viewer.addEventListener('urdf-processed', () => {
@@ -825,9 +928,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
             intersectionHelper.setRotationFromQuaternion(quaternion);
 
-            console.log('Intersection position:', intersect.point);
+            //console.log('Intersection position:', intersect.point);
 
-            console.log('Helper position:', intersectionHelper.position);
+            //console.log('Helper position:', intersectionHelper.position);
             
         } else {
             intersectionHelper.visible = false;
